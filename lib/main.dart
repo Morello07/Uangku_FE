@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:uangku_app/views/add_transaction_view.dart';
 import 'package:uangku_app/views/goals_view.dart';
 import 'package:uangku_app/views/home_view.dart';
+import 'package:uangku_app/views/main_navigation_view.dart';
 import 'package:uangku_app/views/profile_view.dart';
 import 'package:uangku_app/views/statistics_view.dart';
 import 'views/login_view.dart';
@@ -46,6 +47,7 @@ class MyApp extends StatelessWidget {
          '/statistics': (context) => StatisticsView(),
          '/profile': (context) => const ProfileView(),
          '/goals': (context) => const GoalsView(),
+         '/main': (context) => const MainNavigationView(),
 
       },
     );

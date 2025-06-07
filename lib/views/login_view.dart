@@ -1,4 +1,8 @@
 import 'package:flutter/material.dart';
+import '../theme/colors.dart';
+import '../theme/text_styles.dart';
+import '../widgets/auth_input_field.dart';
+import '../widgets/custom_button.dart';
 
 class LoginView extends StatelessWidget {
   final TextEditingController emailController = TextEditingController();
@@ -7,7 +11,7 @@ class LoginView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: AppColors.background,
       body: SafeArea(
         child: Center(
           child: Padding(
@@ -16,99 +20,54 @@ class LoginView extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const SizedBox(height: 40),
-                const Text(
-                  'Hai!',
-                  style: TextStyle(
-                    fontSize: 48,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.black,
-                  ),
-                ),
+                const Text('Hai!', style: AppTextStyles.heading),
                 const SizedBox(height: 8),
                 Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                   decoration: BoxDecoration(
-                    color: Color(0xFFF4B400),
+                    color: AppColors.secondary,
                     borderRadius: BorderRadius.circular(8),
                   ),
-                  child: const Text(
-                    'Welcome to UangKu',
-                    style: TextStyle(
-                      fontSize: 16,
-                      color: Colors.black,
-                    ),
-                  ),
+                  child: Text('Welcome to UangKu', style: AppTextStyles.subtitle),
                 ),
                 const SizedBox(height: 48),
-
-                // Email field
-                _buildInputField(
+                AuthInputField(
                   icon: Icons.email,
                   hint: 'Email',
                   controller: emailController,
-                  obscureText: false,
                 ),
                 const SizedBox(height: 16),
-
-                // Password field
-                _buildInputField(
+                AuthInputField(
                   icon: Icons.lock,
                   hint: 'Password',
                   controller: passwordController,
                   obscureText: true,
                 ),
                 const SizedBox(height: 32),
-
-                // Login Button
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    onPressed: () {
-                      Navigator.pushReplacementNamed(context, '/home');
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Color(0xFF2D6A4F),
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(32),
-                      ),
-                    ),
-                    child: const Text(
-                      'Login',
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 16,
-                        color: Color.fromARGB(255, 255, 255, 255),
-                      ),
-                    ),
-                  ),
+                CustomButton(
+                  text: 'Login',
+                  onPressed: () => Navigator.pushReplacementNamed(context, '/main'),
                 ),
                 const SizedBox(height: 24),
-
-                // Register link
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     const Text("Belum punya akun?"),
                     const SizedBox(width: 8),
                     GestureDetector(
-                      onTap: () {
-                        Navigator.pushNamed(context, '/register');
-                      },
+                      onTap: () => Navigator.pushNamed(context, '/register'),
                       child: Container(
                         padding: const EdgeInsets.symmetric(
-                            horizontal: 12, vertical: 6),
+                          horizontal: 12,
+                          vertical: 6,
+                        ),
                         decoration: BoxDecoration(
-                          color: Color(0xFF2D6A4F),
+                          color: AppColors.primary,
                           borderRadius: BorderRadius.circular(16),
                         ),
                         child: const Text(
                           "Register disini",
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                          ),
+                          style: AppTextStyles.button,
                         ),
                       ),
                     )
@@ -119,30 +78,6 @@ class LoginView extends StatelessWidget {
           ),
         ),
       ),
-    );
-  }
-
-  Widget _buildInputField({
-    required IconData icon,
-    required String hint,
-    required TextEditingController controller,
-    required bool obscureText,
-  }) {
-    return TextField(
-      controller: controller,
-      obscureText: obscureText,
-      decoration: InputDecoration(
-        prefixIcon: Icon(icon, color: Colors.white),
-        hintText: hint,
-        hintStyle: const TextStyle(color: Colors.white),
-        filled: true,
-        fillColor: Color(0xFF2D6A4F),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(32),
-          borderSide: BorderSide.none,
-        ),
-      ),
-      style: const TextStyle(color: Colors.white),
     );
   }
 }

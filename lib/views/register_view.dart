@@ -1,4 +1,11 @@
 import 'package:flutter/material.dart';
+import '../service/auth_service.dart';
+import '../theme/colors.dart';
+import '../theme/text_styles.dart';
+import '../widgets/auth_header.dart';
+import '../widgets/auth_input_field.dart';
+import '../widgets/auth_link.dart';
+import '../widgets/custom_button.dart';
 
 class RegisterView extends StatefulWidget {
   const RegisterView({super.key});
@@ -12,17 +19,29 @@ class _RegisterViewState extends State<RegisterView> {
   final _nameController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+  final _authService = AuthService();
 
-  void _register() {
+  Future<void> _register() async {
     if (_formKey.currentState!.validate()) {
-      Navigator.pushReplacementNamed(context, '/home', arguments: _nameController.text);
+      final success = await _authService.register(
+        _nameController.text,
+        _emailController.text,
+        _passwordController.text,
+      );
+      if (success) {
+        Navigator.pushReplacementNamed(
+          context,
+          '/home',
+          arguments: _nameController.text,
+        );
+      }
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white, // Sama seperti LoginView
+      backgroundColor: AppColors.background,
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(24),
@@ -32,45 +51,23 @@ class _RegisterViewState extends State<RegisterView> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const SizedBox(height: 40),
-                const Text(
-                  'Register',
-                  style: TextStyle(
-                    fontSize: 48,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.black,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                  decoration: BoxDecoration(
-                    color: Color(0xFFF4B400),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: const Text(
-                    'Buat akun baru di UangKu',
-                    style: TextStyle(
-                      fontSize: 16,
-                      color: Colors.black,
-                    ),
-                  ),
+                const AuthHeader(
+                  title: 'Register',
+                  subtitle: 'Buat akun baru di UangKu',
                 ),
                 const SizedBox(height: 48),
-
-                // Input fields
-                _buildInputField(
+                AuthInputField(
                   icon: Icons.person,
                   hint: 'Nama',
                   controller: _nameController,
-                  obscureText: false,
-                  validator: (value) => value!.isEmpty ? 'Nama tidak boleh kosong' : null,
+                  validator: (value) =>
+                      value!.isEmpty ? 'Nama tidak boleh kosong' : null,
                 ),
                 const SizedBox(height: 16),
-                _buildInputField(
+                AuthInputField(
                   icon: Icons.email,
                   hint: 'Email',
                   controller: _emailController,
-                  obscureText: false,
                   validator: (value) {
                     if (value!.isEmpty) return 'Email tidak boleh kosong';
                     if (!value.contains('@')) return 'Email tidak valid';
@@ -78,7 +75,7 @@ class _RegisterViewState extends State<RegisterView> {
                   },
                 ),
                 const SizedBox(height: 16),
-                _buildInputField(
+                AuthInputField(
                   icon: Icons.lock,
                   hint: 'Password',
                   controller: _passwordController,
@@ -87,87 +84,19 @@ class _RegisterViewState extends State<RegisterView> {
                       value!.length < 6 ? 'Password minimal 6 karakter' : null,
                 ),
                 const SizedBox(height: 32),
-
-                // Register Button
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    onPressed: _register,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Color(0xFF2D6A4F),
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(32),
-                      ),
-                    ),
-                    child: const Text(
-                      'Register',
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 16,
-                        color: Colors.white,
-                      ),
-                    ),
-                  ),
+                CustomButton(
+                  text: 'Register',
+                  onPressed: _register,
                 ),
                 const SizedBox(height: 24),
-
-                // Login redirect
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Text("Sudah punya akun?"),
-                    const SizedBox(width: 8),
-                    GestureDetector(
-                      onTap: () {
-                        Navigator.pushReplacementNamed(context, '/login');
-                      },
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                        decoration: BoxDecoration(
-                          color: Color(0xFF2D6A4F),
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                        child: const Text(
-                          "Login disini",
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                    )
-                  ],
-                )
+                AuthLink(
+                  text: 'Sudah punya akun?',
+                  linkText: 'Login disini',
+                  onTap: () => Navigator.pushReplacementNamed(context, '/login'),
+                ),
               ],
             ),
           ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildInputField({
-    required IconData icon,
-    required String hint,
-    required TextEditingController controller,
-    required bool obscureText,
-    String? Function(String?)? validator,
-  }) {
-    return TextFormField(
-      controller: controller,
-      obscureText: obscureText,
-      validator: validator,
-      style: const TextStyle(color: Colors.white),
-      decoration: InputDecoration(
-        prefixIcon: Icon(icon, color: Colors.white),
-        hintText: hint,
-        hintStyle: const TextStyle(color: Colors.white),
-        filled: true,
-        fillColor: Color(0xFF2D6A4F),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(32),
-          borderSide: BorderSide.none,
         ),
       ),
     );

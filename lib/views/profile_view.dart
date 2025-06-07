@@ -8,8 +8,8 @@ class ProfileView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     // Contoh data user sementara, nanti dari state user login
-    final userName = 'User Contoh';
-    final userEmail = 'user@example.com';
+    final userName = 'aksa ganteng';
+    final userEmail = 'aksa@gmail.com';
 
     return Scaffold(
       appBar: AppBar(

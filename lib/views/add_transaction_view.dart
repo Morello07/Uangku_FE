@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../theme/colors.dart';
-import '../theme/text_styles.dart';
+import '../service/transaction_form_service.dart';
+import '../widgets/transaction_form_fields.dart';
 
 class AddTransactionView extends StatefulWidget {
   const AddTransactionView({super.key});
@@ -11,35 +12,34 @@ class AddTransactionView extends StatefulWidget {
 
 class _AddTransactionViewState extends State<AddTransactionView> {
   final _formKey = GlobalKey<FormState>();
-  String _title = '';
-  int? _amount;
-  bool _isExpense = true;
-  DateTime _selectedDate = DateTime.now();
+  final _formService = TransactionFormService();
+  final _titleController = TextEditingController();
+  final _amountController = TextEditingController();
 
   Future<void> _pickDate() async {
     final picked = await showDatePicker(
       context: context,
-      initialDate: _selectedDate,
+      initialDate: _formService.form.date,
       firstDate: DateTime(2000),
       lastDate: DateTime(2100),
     );
-    if (picked != null && picked != _selectedDate) {
+    if (picked != null && picked != _formService.form.date) {
       setState(() {
-        _selectedDate = picked;
+        _formService.form.date = picked;
       });
     }
   }
 
   void _saveTransaction() {
     if (_formKey.currentState!.validate()) {
-      _formKey.currentState!.save();
-      // nanti simpan ke database / backend atau local storage
-      print('Judul: $_title');
-      print('Jumlah: $_amount');
-      print('Tipe: ${_isExpense ? "Pengeluaran" : "Pemasukan"}');
-      print('Tanggal: $_selectedDate');
-
-      Navigator.pop(context); // kembali ke halaman sebelumnya
+      _formService.form.title = _titleController.text.trim();
+      _formService.form.amount = int.tryParse(_amountController.text);
+      
+      if (_formService.form.validate()) {
+        final transaction = _formService.createTransaction();
+        // TODO: Save transaction using transaction service
+        Navigator.pop(context);
+      }
     }
   }
 
@@ -56,81 +56,19 @@ class _AddTransactionViewState extends State<AddTransactionView> {
           key: _formKey,
           child: Column(
             children: [
-              TextFormField(
-                decoration: const InputDecoration(labelText: 'Judul Transaksi'),
-                onSaved: (value) => _title = value!.trim(),
-                validator: (value) =>
-                    value == null || value.isEmpty ? 'Judul tidak boleh kosong' : null,
-              ),
-              const SizedBox(height: 16),
-              TextFormField(
-                decoration: const InputDecoration(labelText: 'Jumlah (Rp)'),
-                keyboardType: TextInputType.number,
-                onSaved: (value) => _amount = int.tryParse(value ?? '0'),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Jumlah tidak boleh kosong';
-                  }
-                  if (int.tryParse(value) == null) {
-                    return 'Masukkan angka yang valid';
-                  }
-                  return null;
+              TransactionFormFields(
+                titleController: _titleController,
+                amountController: _amountController,
+                isExpense: _formService.form.isExpense,
+                selectedDate: _formService.form.date,
+                onTypeChanged: (value) {
+                  setState(() {
+                    _formService.form.isExpense = value;
+                  });
                 },
+                onDatePick: _pickDate,
               ),
-              const SizedBox(height: 16),
-
-              Row(
-                children: [
-                  Expanded(
-                    child: ListTile(
-                      title: const Text('Pengeluaran'),
-                      leading: Radio<bool>(
-                        value: true,
-                        groupValue: _isExpense,
-                        onChanged: (value) {
-                          setState(() {
-                            _isExpense = value!;
-                          });
-                        },
-                      ),
-                    ),
-                  ),
-                  Expanded(
-                    child: ListTile(
-                      title: const Text('Pemasukan'),
-                      leading: Radio<bool>(
-                        value: false,
-                        groupValue: _isExpense,
-                        onChanged: (value) {
-                          setState(() {
-                            _isExpense = value!;
-                          });
-                        },
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-
-              const SizedBox(height: 16),
-
-              Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      'Tanggal: ${_selectedDate.day}-${_selectedDate.month}-${_selectedDate.year}',
-                      style: AppTextStyles.subtitle,
-                    ),
-                  ),
-                  TextButton(
-                    onPressed: _pickDate,
-                    child: const Text('Pilih Tanggal'),
-                  ),
-                ],
-              ),
-
               const SizedBox(height: 32),
-
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
@@ -143,5 +81,12 @@ class _AddTransactionViewState extends State<AddTransactionView> {
         ),
       ),
     );
+  }
+
+  @override
+  void dispose() {
+    _titleController.dispose();
+    _amountController.dispose();
+    super.dispose();
   }
 }

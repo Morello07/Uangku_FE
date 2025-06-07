@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import '../theme/colors.dart';
-import '../theme/text_styles.dart';
+import '../models/goal_model.dart';
+import '../service/goals_service.dart';
+import '../widgets/goal_card.dart';
+import '../widgets/add_goal_dialog.dart';
 
 class GoalsView extends StatefulWidget {
   const GoalsView({super.key});
@@ -10,67 +13,70 @@ class GoalsView extends StatefulWidget {
 }
 
 class _GoalsViewState extends State<GoalsView> {
-  List<Map<String, dynamic>> goals = [
-    {
-      'title': 'Beli Laptop',
-      'target': 10000000,
-      'progress': 3500000,
-    },
-    {
-      'title': 'Liburan Bali',
-      'target': 5000000,
-      'progress': 1200000,
-    },
-  ];
+  final GoalsService _goalsService = GoalsService();
 
-  void _addGoal() {
+  void _showAddGoalDialog() {
     showDialog(
       context: context,
-      builder: (_) {
-        final titleController = TextEditingController();
-        final targetController = TextEditingController();
-
-        return AlertDialog(
-          title: const Text('Tambah Tujuan Keuangan'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
-                controller: titleController,
-                decoration: const InputDecoration(labelText: 'Nama Goal'),
-              ),
-              TextField(
-                controller: targetController,
-                decoration: const InputDecoration(labelText: 'Target Nominal'),
-                keyboardType: TextInputType.number,
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                final title = titleController.text;
-                final target = double.tryParse(targetController.text);
-                if (title.isNotEmpty && target != null && target > 0) {
-                  setState(() {
-                    goals.add({
-                      'title': title,
-                      'target': target,
-                      'progress': 0.0,
-                    });
-                  });
-                  Navigator.pop(context);
-                }
-              },
-              child: const Text('Simpan'),
-            )
-          ],
-        );
-      },
+      builder: (_) => AddGoalDialog(
+        onSave: (goal) {
+          setState(() {
+            _goalsService.addGoal(goal);
+          });
+        },
+      ),
     );
   }
 
-  void _addProgress(int index) {
+  void _showEditGoalDialog(int index, GoalModel goal) {
+    showDialog(
+      context: context,
+      builder: (_) => AddGoalDialog(
+        initialTitle: goal.title,
+        initialTarget: goal.target,
+        onSave: (updatedGoal) {
+          setState(() {
+            _goalsService.updateGoal(
+              index,
+              GoalModel(
+                title: updatedGoal.title,
+                target: updatedGoal.target,
+                progress: goal.progress,
+              ),
+            );
+          });
+        },
+      ),
+    );
+  }
+
+  void _showDeleteConfirmation(int index) {
+    showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: const Text('Hapus Goal'),
+        content: const Text('Apakah Anda yakin ingin menghapus goal ini?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Batal'),
+          ),
+          TextButton(
+            onPressed: () {
+              setState(() {
+                _goalsService.deleteGoal(index);
+              });
+              Navigator.pop(context);
+            },
+            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            child: const Text('Hapus'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showAddProgressDialog(int index) {
     showDialog(
       context: context,
       builder: (_) {
@@ -88,10 +94,7 @@ class _GoalsViewState extends State<GoalsView> {
                 final add = double.tryParse(controller.text);
                 if (add != null && add > 0) {
                   setState(() {
-                    goals[index]['progress'] += add;
-                    if (goals[index]['progress'] > goals[index]['target']) {
-                      goals[index]['progress'] = goals[index]['target'];
-                    }
+                    _goalsService.addProgress(index, add);
                   });
                   Navigator.pop(context);
                 }
@@ -112,7 +115,7 @@ class _GoalsViewState extends State<GoalsView> {
         backgroundColor: AppColors.primary,
         actions: [
           IconButton(
-            onPressed: _addGoal,
+            onPressed: _showAddGoalDialog,
             icon: const Icon(Icons.add),
           ),
         ],
@@ -120,45 +123,14 @@ class _GoalsViewState extends State<GoalsView> {
       backgroundColor: AppColors.background,
       body: ListView.separated(
         padding: const EdgeInsets.all(16),
-        itemCount: goals.length,
+        itemCount: _goalsService.goals.length,
         separatorBuilder: (_, __) => const SizedBox(height: 16),
-        itemBuilder: (_, index) {
-          final goal = goals[index];
-          final progress = goal['progress'] / goal['target'];
-
-          return Card(
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-            elevation: 3,
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(goal['title'], style: AppTextStyles.subtitle),
-                  const SizedBox(height: 8),
-                  LinearProgressIndicator(
-                    value: progress,
-                    backgroundColor: Colors.grey[300],
-                    color: AppColors.primary,
-                    minHeight: 10,
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Rp ${goal['progress'].toInt()} / Rp ${goal['target'].toInt()}',
-                    style: AppTextStyles.body,
-                  ),
-                  Align(
-                    alignment: Alignment.centerRight,
-                    child: TextButton(
-                      onPressed: () => _addProgress(index),
-                      child: const Text('Tambah Tabungan'),
-                    ),
-                  )
-                ],
-              ),
-            ),
-          );
-        },
+        itemBuilder: (_, index) => GoalCard(
+          goal: _goalsService.goals[index],
+          onAddProgress: () => _showAddProgressDialog(index),
+          onEdit: () => _showEditGoalDialog(index, _goalsService.goals[index]),
+          onDelete: () => _showDeleteConfirmation(index),
+        ),
       ),
     );
   }
